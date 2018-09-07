@@ -4,8 +4,9 @@ import {bindActionCreators} from 'redux';
 import toastr from 'toastr';
 import * as courseActions from '../../actions/courseActions';
 import CourseForm from './CourseForm';
+import {formatAuthorsForDropdown} from "../../selectors/selectors";
 
-class ManageCoursePage extends React.Component {
+export class ManageCoursePage extends React.Component {
   constructor(props, context) {
     super(props, context);
 
@@ -17,7 +18,6 @@ class ManageCoursePage extends React.Component {
 
     this.updateCourseState = this.updateCourseState.bind(this);
     this.saveCourse = this.saveCourse.bind(this);
-    this.redirect = this.redirect.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -39,14 +39,32 @@ class ManageCoursePage extends React.Component {
     this.context.router.push('/courses');
   }
 
+  isCourseFormValid() {
+    let formIsValid = true;
+    let errors = {};
+
+    if (this.state.course.title.length < 5) {
+      errors.title = "Title must be at least 5 characters.";
+      formIsValid = false;
+    }
+
+    this.setState({errors});
+    return formIsValid;
+  }
+
   saveCourse(event) {
     event.preventDefault();
+
+    if (!this.isCourseFormValid()) {
+      return;
+    }
+
     this.setState({saving: true});
     this.props.actions.saveCourse(this.state.course)
-      .then(this.redirect)
+      .then(() => this.redirect())
       .catch(error => {
         toastr.error(error);
-        setState({saving: false});
+        this.setState({saving: false});
       });
   }
 
@@ -87,13 +105,9 @@ function mapStateToProps(state, ownProps) {
     course = getCourseById(state.courses, courseId);
   }
 
-  const authorsFormattedForDropdown = state.authors.map(author => {
-    return { value: author.id, text: author.firstName + " " + author.lastName };
-  });
-
   return {
     course: course,
-    authors: authorsFormattedForDropdown
+    authors: formatAuthorsForDropdown(state.authors)
   };
 }
 

@@ -23,7 +23,7 @@ export function loadCourses() {
       dispatch(ajaxCallError());
       throw(error);
     });
-  }
+  };
 }
 
 export function saveCourse(course) {
